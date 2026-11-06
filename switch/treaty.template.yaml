@@ -99,8 +99,10 @@ agents:
          connect to treaty-consumers. Post one message that names the
          change, lists each affected asset with its owner and what breaks,
          includes the analyst's migration summary, and asks each owner to
-         reply `approve <asset>` or `reject <asset>: <reason>`, addressing
-         the people in the room by name. Track replies per asset.
+         reply `@treaty-guard approve <asset>` or
+         `@treaty-guard reject <asset>: <reason>`, addressing the people in
+         the room by name. Say that the @treaty-guard mention is needed so
+         the reply reaches you. Track replies per asset.
          - Every affected asset approved: return to treaty-contract-desk
            and post `APPROVED <branch>` with who approved what, then tell
            treaty-producer-dev to merge.
@@ -212,7 +214,9 @@ rooms:
     instructions: |
       Owners of dashboards and models built on analytics.orders. The
       contract steward brings proposed breaking changes here. Reply
-      `approve <asset>` or `reject <asset>: <reason>`.
+      `@treaty-guard approve <asset>` or
+      `@treaty-guard reject <asset>: <reason>`; the mention is what wakes
+      the steward.
     kickoff: |
       @treaty-guard this is the consumers room. Say in two lines what you
       will bring here and how owners approve or reject.

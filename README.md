@@ -20,7 +20,7 @@ Built for the [Flip the Switch hackathon](https://www.wemakedevs.org/hackathons/
 | 2 | `treaty-producers` | **treaty-producer-dev** | Branches, changes the model and the contract together, bumps the version, runs the check, and files the proposal with the contract desk |
 | 3 | `treaty-contract-desk` | **treaty-guard** (holds the `contract-steward` role) | Runs `treaty check` and posts the result verbatim: BREAKING, with Revenue Daily and Customer LTV affected and the Fulfilment report safe |
 | 4 | `treaty-contract-desk` | **treaty-impact-analyst** | Reads each affected consumer's SQL, commits a migration per consumer, and flags where a mechanical fix would be wrong |
-| 5 | `treaty-consumers` | **treaty-guard** → consumer owners (people) | Lists what breaks for whom with the proposed fix, and asks for `approve <asset>` or `reject <asset>: <reason>` |
+| 5 | `treaty-consumers` | **treaty-guard** → consumer owners (people) | Lists what breaks for whom with the proposed fix, and asks for `@treaty-guard approve <asset>` or `@treaty-guard reject <asset>: <reason>` |
 | 6 | `treaty-contract-desk` | **treaty-guard** | Every owner approved → `APPROVED`, the decision is written to the `contract-ledger` room document, and the producer agent merges. Any rejection → `BLOCKED`, back to the producers |
 
 ```mermaid
@@ -71,7 +71,7 @@ About 15 minutes after Switch is installed.
 3. **Ask for a change.** In `treaty-producers`, post:
    > @treaty-producer-dev rename `amount` to `amount_usd` and store it in USD, decimal(18,2).
 4. **Follow it.** Watch the proposal arrive in `treaty-contract-desk`, the verdict and migrations get posted, and the sign-off request appear in `treaty-consumers`.
-5. **Decide.** In `treaty-consumers`, reply `approve Revenue Daily dashboard` and `approve Customer LTV model` (or reject one and watch it come back as `BLOCKED`).
+5. **Decide.** In `treaty-consumers`, reply `@treaty-guard approve Revenue Daily dashboard` and `@treaty-guard approve Customer LTV model` (or reject one and watch it come back as `BLOCKED`). The mention matters: in Switch an agent acts only on messages that address it.
 6. **Check the record.** The `contract-ledger` document in `treaty-contract-desk` holds the decision, and `main` in the workspace has the merge.
 
 In a real team each consumer owner replies from their own account. In the demo, one person plays every human part.
