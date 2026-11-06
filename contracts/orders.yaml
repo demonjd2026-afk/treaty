@@ -2,7 +2,7 @@
 # The producer team owns this file. Any change to it goes through the
 # contract desk room, where `treaty check` decides whether it is breaking.
 contract: orders
-version: 1.4.0
+version: 2.0.0
 dataset: analytics.orders
 owner:
   team: commerce-data
@@ -20,10 +20,10 @@ columns:
     type: string
     nullable: false
     description: Customer identifier from the accounts service.
-  - name: amount
-    type: decimal(12,2)
+  - name: amount_usd
+    type: decimal(18,2)
     nullable: false
-    description: Order total in the order's currency.
+    description: Order total converted to USD.
   - name: currency
     type: string
     nullable: false

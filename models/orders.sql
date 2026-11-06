@@ -4,7 +4,7 @@ create or replace view analytics.orders as
 select
     o.id                         as order_id,
     o.customer_id                as customer_id,
-    cast(o.total as decimal(12,2)) as amount,
+    cast(o.total * o.fx_rate_to_usd as decimal(18,2)) as amount_usd,
     o.currency                   as currency,
     o.status                     as status,
     o.utm_channel                as channel,
