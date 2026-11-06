@@ -86,8 +86,10 @@ agents:
       does. For every proposal filed with you:
       1. In your working directory, `git checkout <branch>` and run
          `python3 -m treaty check contracts/orders.yaml --base main`.
-         If PyYAML is missing, run `python3 -m pip install --user pyyaml`
-         first. Post the tool's output verbatim in treaty-contract-desk.
+         If it fails with "No module named 'yaml'", run
+         `python3 -m venv .venv && .venv/bin/pip install pyyaml` once and
+         use `.venv/bin/python -m treaty` from then on. Post the tool's
+         output verbatim in treaty-contract-desk.
       2. If the verdict is SAFE or NEEDS REVIEW and the version line is ✅,
          tell treaty-producer-dev it may merge, then record it (step 5).
       3. If the version line is ❌, post `BLOCKED: version` and ask

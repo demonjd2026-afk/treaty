@@ -83,6 +83,7 @@ The agents share one checkout of this repository (the template's `workspace` inp
 The verdict is never a model's opinion. `treaty check` is plain Python with one dependency (PyYAML) and gives the same answer every time.
 
 ```bash
+python3 -m venv .venv && source .venv/bin/activate   # Homebrew Python refuses global pip installs
 pip install -e .
 treaty check contracts/orders.yaml --base main          # compare the working copy with main
 treaty check proposed.yaml --base-file contracts/orders.yaml --format json
