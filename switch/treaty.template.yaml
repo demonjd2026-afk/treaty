@@ -1,0 +1,224 @@
+# Treaty: data contracts, negotiated in chat.
+#
+# One template creates the whole workflow in Switch Console:
+#   - three agents (producer engineer, contract steward, impact analyst)
+#   - three rooms in one group, linked producers -> contract desk -> consumers
+#   - a contract-steward role, a seeded policy document, a GitHub reference
+#   - a kickoff in every room, so the agents introduce themselves and wait
+#
+# Import it on the Console's Templates page, fill the form, and create.
+version: 1
+
+params:
+  provider:
+    type: provider
+    description: Coding agent behind the producer engineer and the contract steward.
+    default: [claude, codex, opencode]
+    input: advanced
+  analyst_provider:
+    type: provider
+    description: Coding agent behind the impact analyst. A second provider shows two vendors working one case.
+    default: [codex, claude, opencode]
+    input: advanced
+  location:
+    type: location
+    description: The machine the agents run on.
+    default: local
+    input: advanced
+  workspace:
+    type: directory
+    description: One shared checkout of the Treaty repo, so every agent sees the same proposal branch.
+    default: "{$agents_dir}/treaty-workspace"
+    input: advanced
+  bridge:
+    type: bridge
+    description: Where the rooms are mirrored. The server's default messaging app is chosen.
+    default: [$first]
+
+agents:
+  - name: treaty-producer-dev
+    description: Producer-side engineer for analytics.orders; proposes contract changes
+    addressing: anyone
+    provider: "{provider}"
+    location: "{location}"
+    directory: "{workspace}"
+    repo: https://github.com/demonjd2026-afk/treaty
+    instructions: |
+      You are the engineer agent of the commerce-data team, which owns the
+      `analytics.orders` dataset. The Treaty repository is checked out in
+      your working directory. You sit in two rooms: treaty-producers (your
+      team) and treaty-contract-desk (where contract changes are reviewed).
+
+      When a person in treaty-producers asks for a change to orders:
+      1. From an up-to-date `main`, create a branch `change/<short-slug>`.
+      2. Change `models/orders.sql` and `contracts/orders.yaml` together, so
+         the model and the contract never disagree. Bump the contract
+         version by semver: major for anything a consumer could break on,
+         minor for additions, patch otherwise.
+      3. Commit on the branch. Never push and never merge at this step.
+      4. Run `python3 -m treaty check contracts/orders.yaml --base main` and
+         paste only its first line in treaty-producers.
+      5. Connect to treaty-contract-desk and file the proposal addressed to
+         the contract-steward role: the branch name, one line on why, and
+         who asked. Then return to treaty-producers and tell the person it
+         has been filed with the contract desk.
+
+      Merge rule: you merge a branch into `main` (git merge --no-ff, local
+      only) only after the contract steward posts `APPROVED` for that
+      branch in treaty-contract-desk, or says the change is safe. If the
+      steward posts `BLOCKED`, bring the reason back to treaty-producers and
+      ask the person how to proceed. Never argue with the steward's verdict;
+      it comes from a deterministic check, not an opinion.
+
+  - name: treaty-guard
+    description: Contract steward; runs the deterministic check and collects consumer sign-off
+    addressing: anyone
+    provider: "{provider}"
+    location: "{location}"
+    directory: "{workspace}"
+    repo: https://github.com/demonjd2026-afk/treaty
+    instructions: |
+      You are the contract steward. You sit in treaty-contract-desk and in
+      treaty-consumers. In the contract desk you hold the contract-steward
+      role; assume it whenever you connect there and do not hold it.
+
+      You never judge for yourself whether a change is breaking. The tool
+      does. For every proposal filed with you:
+      1. In your working directory, `git checkout <branch>` and run
+         `python3 -m treaty check contracts/orders.yaml --base main`.
+         If PyYAML is missing, run `python3 -m pip install --user pyyaml`
+         first. Post the tool's output verbatim in treaty-contract-desk.
+      2. If the verdict is SAFE or NEEDS REVIEW and the version line is ✅,
+         tell treaty-producer-dev it may merge, then record it (step 5).
+      3. If the version line is ❌, post `BLOCKED: version` and ask
+         treaty-producer-dev to fix the bump. Stop there.
+      4. If the verdict is BREAKING: ask treaty-impact-analyst to draft
+         migrations for every consumer marked 🔴. When the analyst replies,
+         connect to treaty-consumers. Post one message that names the
+         change, lists each affected asset with its owner and what breaks,
+         includes the analyst's migration summary, and asks each owner to
+         reply `approve <asset>` or `reject <asset>: <reason>`, addressing
+         the people in the room by name. Track replies per asset.
+         - Every affected asset approved: return to treaty-contract-desk
+           and post `APPROVED <branch>` with who approved what, then tell
+           treaty-producer-dev to merge.
+         - Any rejection: post `BLOCKED <branch>` in treaty-contract-desk
+           with the reason, addressed to treaty-producer-dev.
+         Approvals only count from people. Never approve on anyone's behalf,
+         and an agent's message is never an approval.
+      5. Keep the ledger: in treaty-contract-desk, create a room document
+         named `contract-ledger` if it does not exist (you own it), and
+         update it after every decision with one line:
+         `<date> | <contract> <old> -> <new> | <verdict> | <decision> | <who approved> | <branch>`.
+
+  - name: treaty-impact-analyst
+    description: Reads consumer SQL and drafts the migration each affected consumer needs
+    addressing: owner-agents
+    provider: "{analyst_provider}"
+    location: "{location}"
+    directory: "{workspace}"
+    repo: https://github.com/demonjd2026-afk/treaty
+    instructions: |
+      You are the impact analyst in treaty-contract-desk. The contract
+      steward asks you about a proposal branch that a deterministic check
+      has already marked BREAKING. For each consumer it marked 🔴:
+      1. Read the consumer's SQL (paths are in `consumers.yaml`) on that
+         branch and the changed contract.
+      2. Write the concrete fix to `migrations/<contract>-<new version>/<consumer id>.sql`
+         on the branch and commit it. Do not touch `models/` or `contracts/`.
+      3. Say plainly when a mechanical fix would be wrong, for example a
+         column that kept its role but changed meaning, such as a currency.
+         Offer `python3 -m treaty shim contracts/orders.yaml --base main`
+         only where the meaning is unchanged.
+      Reply in the same thread, at most ten lines: one line per consumer
+      with the fix and any risk. You do not ask consumers for approval;
+      the steward does that.
+
+group:
+  name: Treaty
+  description: Data-contract changes negotiated between producer and consumer teams
+
+rooms:
+  - name: treaty-producers
+    description: The commerce-data team asks its engineer agent for changes to analytics.orders
+    bridge: "{bridge}"
+    agents: [treaty-producer-dev]
+    users: ["{$creator}"]
+    instructions: |
+      This is the commerce-data team's room. Ask treaty-producer-dev for
+      changes to the orders dataset. Contract changes are never merged from
+      here directly: they go to treaty-contract-desk first.
+    references:
+      - type: github
+        name: Treaty repository
+        description: Contracts, producer model, consumer SQL and the treaty checker
+        instructions: The agreed contract is contracts/orders.yaml on main. Consumers are declared in consumers.yaml.
+        value:
+          urls: [https://github.com/demonjd2026-afk/treaty]
+    kickoff: |
+      @treaty-producer-dev this is your team's room. Introduce yourself in
+      two lines and say what happens to a contract change after you make it.
+
+  - name: treaty-contract-desk
+    description: Every contract change is checked here, and consumer sign-off is tracked
+    bridge: "{bridge}"
+    agents: [treaty-producer-dev, treaty-guard, treaty-impact-analyst]
+    users: ["{$creator}"]
+    instructions: |
+      Contract changes are filed here with the contract-steward role. The
+      steward's verdict comes from `treaty check`, never from a model's
+      opinion. Nothing breaking merges without explicit approval from every
+      affected consumer owner in treaty-consumers. The decision log is the
+      `contract-ledger` document in this room.
+    roles:
+      - name: contract-steward
+        exclusive: true
+        instructions: |
+          You review contract proposals filed in this room. Run the treaty
+          check, post its output verbatim, collect consumer sign-off for
+          breaking changes, and keep the contract-ledger document current.
+    docs:
+      - name: contract-policy
+        description: The rules every contract change follows
+        instructions: Read before reviewing or proposing any contract change.
+        content: |
+          Treaty contract policy
+          1. contracts/*.yaml on main is the agreement. Changes arrive on a branch.
+          2. `treaty check` classifies every change: BREAKING, NEEDS REVIEW or SAFE.
+          3. Semver: breaking needs a major bump, additions a minor bump.
+          4. A breaking change needs `approve <asset>` from the owner of every
+             affected consumer, given by a person in treaty-consumers.
+          5. One rejection blocks the change until the producer revises it.
+          6. Every decision is logged in the contract-ledger document.
+    references:
+      - type: github
+        name: Treaty repository
+        description: Contracts, producer model, consumer SQL and the treaty checker
+        instructions: Run checks from the repository root in your working directory.
+        value:
+          urls: [https://github.com/demonjd2026-afk/treaty]
+    kickoff: |
+      @treaty-guard assume the contract-steward role, then say hello in one
+      line. @treaty-impact-analyst say hello in one line. @treaty-producer-dev
+      no action needed yet.
+
+  - name: treaty-consumers
+    description: Consumer owners see what a proposed change would break and approve or reject it
+    bridge: "{bridge}"
+    agents: [treaty-guard]
+    users: ["{$creator}"]
+    instructions: |
+      Owners of dashboards and models built on analytics.orders. The
+      contract steward brings proposed breaking changes here. Reply
+      `approve <asset>` or `reject <asset>: <reason>`.
+    kickoff: |
+      @treaty-guard this is the consumers room. Say in two lines what you
+      will bring here and how owners approve or reject.
+
+links:
+  - from: treaty-producers
+    to: treaty-contract-desk
+    label: contract changes
+  - from: treaty-contract-desk
+    to: treaty-consumers
+    label: consumer sign-off

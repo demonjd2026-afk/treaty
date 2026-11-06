@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "treaty"
+version = "0.1.0"
+description = "Data contracts, negotiated in chat: a deterministic breaking-change checker used by Switch agents."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = ["PyYAML>=6.0"]
+
+[project.scripts]
+treaty = "treaty.cli:main"
+
+[tool.setuptools]
+packages = ["treaty"]

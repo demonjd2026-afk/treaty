@@ -1,0 +1,43 @@
+# Data contract for analytics.orders.
+# The producer team owns this file. Any change to it goes through the
+# contract desk room, where `treaty check` decides whether it is breaking.
+contract: orders
+version: 2.0.0
+dataset: analytics.orders
+owner:
+  team: commerce-data
+  room: treaty-producers
+description: One row per customer order, refreshed from the checkout service.
+sla:
+  freshness_hours: 6
+columns:
+  - name: order_id
+    type: string
+    nullable: false
+    primary_key: true
+    description: Checkout order identifier.
+  - name: customer_id
+    type: string
+    nullable: false
+    description: Customer identifier from the accounts service.
+  - name: amount_usd
+    type: decimal(18,2)
+    nullable: false
+    description: Order total converted to USD.
+  - name: currency
+    type: string
+    nullable: false
+    description: ISO 4217 currency code.
+  - name: status
+    type: string
+    nullable: false
+    enum: [placed, paid, shipped, delivered, cancelled]
+    description: Current order status.
+  - name: channel
+    type: string
+    nullable: true
+    description: Acquisition channel, when known.
+  - name: created_at
+    type: timestamp
+    nullable: false
+    description: When the order was placed (UTC).

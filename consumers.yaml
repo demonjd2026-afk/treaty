@@ -1,0 +1,30 @@
+# Declared lineage: who reads which contract, and which columns they rely on.
+# `treaty check` also scans each consumer's SQL, so a column used but not
+# declared here is reported as undeclared usage instead of slipping through.
+consumers:
+  - id: finance-revenue-daily
+    contract: orders
+    team: finance-analytics
+    owner: finance owner
+    room: treaty-consumers
+    asset: Revenue Daily dashboard
+    sql: consumers/finance_revenue_daily.sql
+    uses: [order_id, amount, currency, status, created_at]
+
+  - id: marketing-ltv
+    contract: orders
+    team: growth-marketing
+    owner: marketing owner
+    room: treaty-consumers
+    asset: Customer LTV model
+    sql: consumers/marketing_customer_ltv.sql
+    uses: [customer_id, amount, created_at]
+
+  - id: ops-fulfilment
+    contract: orders
+    team: operations
+    owner: ops owner
+    room: treaty-consumers
+    asset: Fulfilment SLA report
+    sql: consumers/ops_fulfilment_sla.sql
+    uses: [order_id, status, created_at]
