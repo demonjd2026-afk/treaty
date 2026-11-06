@@ -128,6 +128,7 @@ tests/                       unit tests and the rename fixture
 ## Design decisions
 
 - **Deterministic verdict, agentic everything else.** Deciding "breaking or not" must be repeatable and auditable, so it's code. Agents do what needs judgment: writing the change, reading consumer SQL, drafting migrations, and running the conversation.
+- **Narrow, local permissions.** `.claude/settings.json` lets the agents run the checker and `git merge --no-ff change/*` without a prompt, and denies `git push` outright, so nothing leaves the machine. Everything else still goes through the coding agent's own safety checks.
 - **Only people approve.** The steward's instructions refuse to count an agent's message as an approval or to approve on anyone's behalf.
 - **The record lives with the work.** The ledger is a room document in the contract desk, so the next agent or person who joins sees every past decision.
 - **Built on what's stable.** Switch's task protocol is marked not ready for use, so Treaty passes work with messages, roles and room documents instead.

@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -m treaty *)",
+      "Bash(.venv/bin/python -m treaty *)",
+      "Bash(git merge --no-ff change/*)"
+    ],
+    "deny": [
+      "Bash(git push *)"
+    ]
+  }
+}
